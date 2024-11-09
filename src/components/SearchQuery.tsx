@@ -36,7 +36,7 @@ export default function SearchQuery({ onSearch, isLoading = false }: SearchQuery
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={"Market Capitalization > 500 AND\nP/E Ratio < 15 AND\nROE > 22"}
+              placeholder={"Market Capitalization > 300 AND\nP/E Ratio < 15 AND\nROE > 22"}
               className="w-full h-32 px-4 py-2 text-sm bg-gray-900 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {error && (
@@ -76,7 +76,7 @@ export default function SearchQuery({ onSearch, isLoading = false }: SearchQuery
         </CardHeader>
         <CardContent>
           <div className="text-gray-300 space-y-1">
-            <p>Market Capitalization &gt; 500 AND</p>
+            <p>Market Capitalization &gt; 300 AND</p>
             <p>P/E Ratio &lt; 15 AND</p>
             <p>ROE &gt; 22</p>
           </div>

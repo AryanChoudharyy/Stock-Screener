@@ -61,7 +61,7 @@ export default function ResultsTable({
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
-  const handleSaveQuery = (name: string, description: string, isPublic: boolean) => {
+  const handleSaveQuery = (name: string, description: string) => {
     onQueryDetailsUpdate(name, description);
   };
 

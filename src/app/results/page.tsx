@@ -71,7 +71,7 @@ export default function ResultsPage() {
         const data = await response.json();
         
         // Process the stocks data and ensure all numeric fields are numbers
-        const processedStocks = data.stocks.map((stock: any) => ({
+        const processedStocks = data.stocks.map((stock: Stock) => ({
           ...stock,
           'Market Capitalization (B)': Number(stock['Market Capitalization (B)']),
           'P/E Ratio': Number(stock['P/E Ratio']),
