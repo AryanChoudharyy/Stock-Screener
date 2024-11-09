@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import SearchQuery from '@/components/SearchQuery';
 import ResultsTable from '@/components/ResultsTable';
@@ -28,7 +28,6 @@ export default function ResultsPage() {
   const searchParams = useSearchParams();
   const queryString = searchParams.get('q') || '';
 
-  // State management
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [filteredStocks, setFilteredStocks] = useState<Stock[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,7 +42,6 @@ export default function ResultsPage() {
     direction: 'asc'
   });
 
-  // Load saved column order from localStorage on initial render
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedColumns = localStorage.getItem('columnOrder');
@@ -58,7 +56,6 @@ export default function ResultsPage() {
     }
   }, []);
 
-  // Load stock data
   useEffect(() => {
     const loadStocksAndFilter = async () => {
       try {
@@ -69,8 +66,7 @@ export default function ResultsPage() {
         }
 
         const data = await response.json();
-        
-        // Process the stocks data and ensure all numeric fields are numbers
+
         const processedStocks = data.stocks.map((stock: Stock) => ({
           ...stock,
           'Market Capitalization (B)': Number(stock['Market Capitalization (B)']),
@@ -83,10 +79,9 @@ export default function ResultsPage() {
           'Current Ratio': Number(stock['Current Ratio']),
           'Gross Margin (%)': Number(stock['Gross Margin (%)'])
         }));
-        
+
         setStocks(processedStocks);
-        
-        // Apply initial filter if query exists
+
         if (queryString) {
           const result = parseQuery(queryString);
           if (result.isValid) {
@@ -110,7 +105,6 @@ export default function ResultsPage() {
     loadStocksAndFilter();
   }, [queryString]);
 
-  // Handle new search
   const handleSearch = (newQuery: string) => {
     setIsLoading(true);
     try {
@@ -132,19 +126,16 @@ export default function ResultsPage() {
     }
   };
 
-  // Handle query details update
   const handleQueryDetailsUpdate = (name: string, description: string) => {
     setQueryName(name);
     setQueryDescription(description);
   };
 
-  // Handle column order update
   const handleColumnOrderChange = (newColumns: Array<ColumnConfig>) => {
     setColumnOrder(newColumns);
     localStorage.setItem('columnOrder', JSON.stringify(newColumns));
   };
 
-  // Handle sorting
   const handleSort = (field: keyof Stock) => {
     setSortConfig(prevConfig => ({
       field,
@@ -155,7 +146,6 @@ export default function ResultsPage() {
     }));
   };
 
-  // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -165,68 +155,69 @@ export default function ResultsPage() {
     setCurrentPage(1);
   };
 
-  // Apply sorting and pagination
   const sortedStocks = sortStocks(filteredStocks, sortConfig);
   const paginatedStocks = paginateStocks(sortedStocks, currentPage, pageSize);
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Search Results</h1>
+    <Suspense fallback={<div>Loading...</div>}>
+      <main className="min-h-screen bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Search Results</h1>
+          </div>
+
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded">
+              {error}
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+              <p className="mt-4 text-gray-400">Loading results...</p>
+            </div>
+          )}
+
+          {!isLoading && filteredStocks.length > 0 && (
+            <div className="space-y-4">
+              <ResultsTable
+                stocks={paginatedStocks}
+                currentPage={currentPage}
+                itemsPerPage={pageSize}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                totalResults={filteredStocks.length}
+                currentQuery={queryString}
+                queryName={queryName}
+                queryDescription={queryDescription}
+                onQueryDetailsUpdate={handleQueryDetailsUpdate}
+                savedColumnOrder={columnOrder}
+                onColumnOrderChange={handleColumnOrderChange}
+              />
+
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredStocks.length}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </div>
+          )}
+
+          {!isLoading && filteredStocks.length === 0 && !error && (
+            <div className="text-center py-8 text-gray-400">
+              No stocks found matching your criteria.
+            </div>
+          )}
+
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <h2 className="text-2xl font-semibold mb-6">Try Another Search</h2>
+            <SearchQuery onSearch={handleSearch} isLoading={isLoading} />
+          </div>
         </div>
-
-        {error && (
-          <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded">
-            {error}
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-            <p className="mt-4 text-gray-400">Loading results...</p>
-          </div>
-        )}
-
-        {!isLoading && filteredStocks.length > 0 && (
-          <div className="space-y-4">
-            <ResultsTable
-              stocks={paginatedStocks}
-              currentPage={currentPage}
-              itemsPerPage={pageSize}
-              sortConfig={sortConfig}
-              onSort={handleSort}
-              totalResults={filteredStocks.length}
-              currentQuery={queryString}
-              queryName={queryName}
-              queryDescription={queryDescription}
-              onQueryDetailsUpdate={handleQueryDetailsUpdate}
-              savedColumnOrder={columnOrder}
-              onColumnOrderChange={handleColumnOrderChange}
-            />
-
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredStocks.length}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </div>
-        )}
-
-        {!isLoading && filteredStocks.length === 0 && !error && (
-          <div className="text-center py-8 text-gray-400">
-            No stocks found matching your criteria.
-          </div>
-        )}
-
-        <div className="mt-12 pt-8 border-t border-gray-800">
-          <h2 className="text-2xl font-semibold mb-6">Try Another Search</h2>
-          <SearchQuery onSearch={handleSearch} isLoading={isLoading} />
-        </div>
-      </div>
-    </main>
+      </main>
+    </Suspense>
   );
 }
