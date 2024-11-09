@@ -23,10 +23,11 @@ const defaultColumns: Array<ColumnConfig> = [
   { field: 'Gross Margin (%)', label: 'Gross Margin %', width: 'w-36' }
 ];
 
-export default function ResultsPage() {
+// Client component wrapper
+function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryString = searchParams.get('q') || '';
+  const queryString = searchParams?.get('q') || '';
 
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [filteredStocks, setFilteredStocks] = useState<Stock[]>([]);
@@ -159,65 +160,77 @@ export default function ResultsPage() {
   const paginatedStocks = paginateStocks(sortedStocks, currentPage, pageSize);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <main className="min-h-screen bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Search Results</h1>
-          </div>
-
-          {error && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded">
-              {error}
-            </div>
-          )}
-
-          {isLoading && (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-              <p className="mt-4 text-gray-400">Loading results...</p>
-            </div>
-          )}
-
-          {!isLoading && filteredStocks.length > 0 && (
-            <div className="space-y-4">
-              <ResultsTable
-                stocks={paginatedStocks}
-                currentPage={currentPage}
-                itemsPerPage={pageSize}
-                sortConfig={sortConfig}
-                onSort={handleSort}
-                totalResults={filteredStocks.length}
-                currentQuery={queryString}
-                queryName={queryName}
-                queryDescription={queryDescription}
-                onQueryDetailsUpdate={handleQueryDetailsUpdate}
-                savedColumnOrder={columnOrder}
-                onColumnOrderChange={handleColumnOrderChange}
-              />
-
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredStocks.length}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            </div>
-          )}
-
-          {!isLoading && filteredStocks.length === 0 && !error && (
-            <div className="text-center py-8 text-gray-400">
-              No stocks found matching your criteria.
-            </div>
-          )}
-
-          <div className="mt-12 pt-8 border-t border-gray-800">
-            <h2 className="text-2xl font-semibold mb-6">Try Another Search</h2>
-            <SearchQuery onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+    <main className="min-h-screen bg-gray-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Search Results</h1>
         </div>
-      </main>
+
+        {error && (
+          <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded">
+            {error}
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+            <p className="mt-4 text-gray-400">Loading results...</p>
+          </div>
+        )}
+
+        {!isLoading && filteredStocks.length > 0 && (
+          <div className="space-y-4">
+            <ResultsTable
+              stocks={paginatedStocks}
+              currentPage={currentPage}
+              itemsPerPage={pageSize}
+              sortConfig={sortConfig}
+              onSort={handleSort}
+              totalResults={filteredStocks.length}
+              currentQuery={queryString}
+              queryName={queryName}
+              queryDescription={queryDescription}
+              onQueryDetailsUpdate={handleQueryDetailsUpdate}
+              savedColumnOrder={columnOrder}
+              onColumnOrderChange={handleColumnOrderChange}
+            />
+
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredStocks.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </div>
+        )}
+
+        {!isLoading && filteredStocks.length === 0 && !error && (
+          <div className="text-center py-8 text-gray-400">
+            No stocks found matching your criteria.
+          </div>
+        )}
+
+        <div className="mt-12 pt-8 border-t border-gray-800">
+          <h2 className="text-2xl font-semibold mb-6">Try Another Search</h2>
+          <SearchQuery onSearch={handleSearch} isLoading={isLoading} />
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// Main page component with proper suspense boundary
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+        <p className="mt-4 text-gray-400">Loading...</p>
+      </div>
+    </div>}>
+      <ResultsContent />
     </Suspense>
   );
 }
